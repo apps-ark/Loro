@@ -1,4 +1,4 @@
-# Interview Translator (EN→ES) con Preservacion de Voz
+# Loro — Traductor de Entrevistas (EN→ES) con Preservacion de Voz
 
 Herramienta offline batch que toma entrevistas en ingles y produce:
 - Transcripcion en espanol por hablante con timestamps
@@ -185,7 +185,7 @@ Ensambla todos los segmentos TTS en una linea de tiempo alineada con el audio or
 
 ```bash
 git clone <repo-url>
-cd interview-translator
+cd loro
 ```
 
 ### 2. Backend (Python)
