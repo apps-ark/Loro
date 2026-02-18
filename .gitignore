@@ -19,6 +19,7 @@ env/
 # Data / work artifacts
 data/work/
 !data/work/.gitkeep
+data/jobs.json
 
 # Audio files
 *.wav

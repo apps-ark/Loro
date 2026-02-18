@@ -15,7 +15,7 @@ class TranslateStep(PipelineStep):
     name = "translate"
     output_files = ["translations.json"]
 
-    def execute(self, **kwargs):
+    def execute(self, progress_callback=None, **kwargs):
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
         cfg = self.config["translation"]
@@ -74,6 +74,14 @@ class TranslateStep(PipelineStep):
             translated_segments.append({
                 **seg,
                 "text_es": text_es,
+            })
+
+            # Emit per-segment progress
+            self._emit(progress_callback, {
+                "type": "step_progress",
+                "step": self.name,
+                "current": i + 1,
+                "total": total,
             })
 
         # Save results

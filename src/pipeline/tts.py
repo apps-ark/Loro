@@ -26,7 +26,7 @@ class TTSStep(PipelineStep):
             return False
         return any(tts_dir.rglob("*.wav"))
 
-    def execute(self, input_audio: str, **kwargs):
+    def execute(self, input_audio: str, progress_callback=None, **kwargs):
         from TTS.api import TTS
 
         cfg = self.config["tts"]
@@ -105,6 +105,14 @@ class TTSStep(PipelineStep):
                 console.print(f"    [{i+1}/{total}] [red]TTS failed for segment {i}[/red]: {e}")
                 self._write_silence(out_file, seg["end"] - seg["start"])
                 manifest.append({**seg, "tts_file": str(out_file.relative_to(self.workdir))})
+
+            # Emit per-segment progress
+            self._emit(progress_callback, {
+                "type": "step_progress",
+                "step": self.name,
+                "current": i + 1,
+                "total": total,
+            })
 
         # Save manifest
         write_json({"segments": manifest}, self.workdir / "tts_manifest.json")

@@ -2,10 +2,17 @@
 
 import abc
 from pathlib import Path
+from typing import Any, Callable
 
 from rich.console import Console
 
 console = Console()
+
+# Type alias for progress callbacks.
+# Signature: callback(event: dict) -> None
+# Events have a "type" key: "step_start", "step_progress", "step_complete",
+# "step_skipped", "error".
+ProgressCallback = Callable[[dict[str, Any]], None]
 
 
 class PipelineStep(abc.ABC):
@@ -39,18 +46,37 @@ class PipelineStep(abc.ABC):
                 import shutil
                 shutil.rmtree(path, ignore_errors=True)
 
-    def run(self, **kwargs):
+    def _emit(self, callback: ProgressCallback | None, event: dict[str, Any]):
+        """Safely emit a progress event if callback is provided."""
+        if callback is not None:
+            try:
+                callback(event)
+            except Exception:
+                pass  # Never let callback errors break the pipeline
+
+    def run(self, progress_callback: ProgressCallback | None = None, **kwargs):
         """Execute the step with idempotency check."""
         if not self.force and self.outputs_exist():
             console.print(f"  [dim]Skipping {self.name} — outputs already exist[/dim]")
+            self._emit(progress_callback, {
+                "type": "step_skipped", "step": self.name,
+            })
             return
 
         console.print(f"  [bold cyan]Running {self.name}...[/bold cyan]")
+        self._emit(progress_callback, {"type": "step_start", "step": self.name})
         try:
-            self.execute(**kwargs)
+            self.execute(progress_callback=progress_callback, **kwargs)
             console.print(f"  [bold green]{self.name} complete[/bold green]")
-        except Exception:
+            self._emit(progress_callback, {
+                "type": "step_complete", "step": self.name,
+            })
+        except Exception as exc:
             console.print(f"  [bold red]{self.name} failed — cleaning partial outputs[/bold red]")
+            self._emit(progress_callback, {
+                "type": "error", "step": self.name,
+                "message": str(exc),
+            })
             self.clean_outputs()
             raise
 
