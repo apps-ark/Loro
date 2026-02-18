@@ -13,7 +13,7 @@ _YT_RE = re.compile(
     r"[\w-]{11}"
 )
 
-MAX_DURATION_SECONDS = 2 * 60 * 60  # 2 hours
+MAX_DURATION_SECONDS = 4 * 60 * 60  # 4 hours
 
 
 def is_valid_youtube_url(url: str) -> bool:
