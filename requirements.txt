@@ -1,0 +1,32 @@
+# ASR (WhisperX)
+whisperx>=3.1.1
+
+# Speaker diarization
+pyannote.audio>=3.1
+
+# Translation (NLLB-200)
+transformers>=4.36.0
+sentencepiece>=0.1.99
+accelerate>=0.25.0
+
+# TTS (Coqui XTTS v2)
+TTS>=0.22.0
+
+# Audio processing
+pydub>=0.25.1
+soundfile>=0.12.1
+librosa>=0.10.1
+numpy>=1.24.0
+pyloudnorm>=0.1.1
+
+# Core
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# CLI & config
+click>=8.1.0
+pyyaml>=6.0.1
+rich>=13.7.0
+
+# Utilities
+python-dotenv>=1.0.0

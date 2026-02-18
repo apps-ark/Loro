@@ -1,0 +1,60 @@
+# Interview Translator - Default Configuration
+
+# Pipeline components
+asr:
+  engine: whisperx
+  model_size: large-v2
+  language: en
+  compute_type: float32  # float32 required for CPU (Apple Silicon)
+  batch_size: 8
+
+diarization:
+  engine: pyannote-community-1
+  model: pyannote/speaker-diarization-3.1
+  max_speakers: 2
+  min_speakers: 1
+
+merge:
+  min_segment_duration: 0.5  # seconds - merge tiny segments below this
+  smoothing: true
+  smoothing_window: 3  # median filter window size for speaker labels
+
+translation:
+  engine: nllb-200
+  model: facebook/nllb-200-distilled-600M
+  src_lang: eng_Latn
+  tgt_lang: spa_Latn
+  max_length: 512
+  batch_size: 8
+
+tts:
+  engine: xtts_v2
+  model: tts_models/multilingual/multi-dataset/xtts_v2
+  language: es
+  # Reference clip extraction
+  ref_min_duration: 6.0   # seconds
+  ref_max_duration: 30.0  # seconds
+  # Text splitting for XTTS limits
+  max_chars_per_chunk: 350
+  # Cache TTS outputs
+  cache: true
+
+render:
+  sample_rate: 44100
+  tts_sample_rate: 22050  # XTTS native output rate
+  # Time-stretch limits
+  stretch_min: 0.7
+  stretch_max: 1.5
+  crossfade_ms: 50
+  target_lufs: -16.0
+  # Output formats
+  export_wav: true
+  export_mp3: true
+  mp3_quality: 2  # ffmpeg -qscale:a (2 = ~190kbps VBR)
+
+# Device overrides (auto = let device.py decide)
+devices:
+  asr: auto
+  diarization: auto
+  translation: auto
+  tts: auto
