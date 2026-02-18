@@ -6,8 +6,6 @@ import re
 from pathlib import Path
 from typing import Callable
 
-import yt_dlp
-
 # Matches youtube.com/watch?v=..., youtu.be/..., youtube.com/shorts/...
 _YT_RE = re.compile(
     r"^(https?://)?(www\.)?"
@@ -53,6 +51,8 @@ def download_audio(
     RuntimeError
         If the download or conversion fails.
     """
+    import yt_dlp
+
     if not is_valid_youtube_url(url):
         raise ValueError(f"URL de YouTube no valida: {url}")
 
