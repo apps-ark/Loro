@@ -6,12 +6,22 @@ export async function createJob(file: File, maxSpeakers: number = 2): Promise<Jo
   formData.append("file", file);
   formData.append("max_speakers", String(maxSpeakers));
 
-  const res = await fetch(`${API_URL}/api/jobs`, {
-    method: "POST",
-    body: formData,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/api/jobs`, {
+      method: "POST",
+      body: formData,
+    });
+  } catch {
+    throw new Error(
+      `No se pudo conectar al servidor (${API_URL}). Verifica que el backend este corriendo.`
+    );
+  }
 
-  if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Error al subir: ${res.status} ${res.statusText}${text ? ` — ${text}` : ""}`);
+  }
   return res.json();
 }
 
