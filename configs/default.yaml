@@ -43,8 +43,8 @@ render:
   sample_rate: 44100
   tts_sample_rate: 22050  # XTTS native output rate
   # Time-stretch limits
-  stretch_min: 0.7
-  stretch_max: 1.5
+  stretch_min: 0.85
+  stretch_max: 1.15
   crossfade_ms: 50
   target_lufs: -16.0
   # Output formats

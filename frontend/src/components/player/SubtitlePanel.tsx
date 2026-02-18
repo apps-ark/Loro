@@ -21,6 +21,11 @@ export function SubtitlePanel({ segments, language, activeIndex, onSeek }: Props
     }
   }, [activeIndex]);
 
+  const getSeekTime = (seg: Segment) => {
+    if (language === "es" && seg.start_es != null) return seg.start_es;
+    return seg.start;
+  };
+
   return (
     <div ref={containerRef} className="h-[400px] overflow-y-auto space-y-1 pr-2">
       {segments.map((seg, i) => (
@@ -29,7 +34,7 @@ export function SubtitlePanel({ segments, language, activeIndex, onSeek }: Props
             segment={seg}
             language={language}
             isActive={i === activeIndex}
-            onClick={() => onSeek(seg.start)}
+            onClick={() => onSeek(getSeekTime(seg))}
           />
         </div>
       ))}

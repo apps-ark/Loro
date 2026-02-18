@@ -1,4 +1,9 @@
-# Loro — Traductor de Entrevistas (EN→ES) con Preservacion de Voz
+<p align="center">
+  <img src="frontend/public/logo.png" alt="Loro" width="180" />
+</p>
+
+<h1 align="center">Loro</h1>
+<p align="center"><strong>Traductor de Entrevistas (EN→ES) con Preservacion de Voz</strong></p>
 
 Herramienta offline batch que toma entrevistas en ingles y produce:
 - Transcripcion en espanol por hablante con timestamps
@@ -103,10 +108,10 @@ Genera audio en espanol para cada segmento usando clonacion de voz. Para cada ha
 
 ### 6. Render (Mezcla final)
 
-Ensambla todos los segmentos TTS en una linea de tiempo alineada con el audio original. Aplica time-stretching cuando la duracion del TTS no coincide con el segmento original (limites: 0.7x a 1.5x). Normaliza el volumen a -16 LUFS y aplica crossfade entre segmentos.
+Ensambla todos los segmentos TTS en una linea de tiempo independiente para el espanol. Aplica time-stretching suave (limites: 0.85x a 1.15x) y coloca los segmentos secuencialmente preservando los gaps originales. Normaliza el volumen a -16 LUFS y aplica crossfade entre segmentos. Genera un mapa de correspondencia entre las lineas de tiempo EN y ES.
 
 - **Entrada**: `tts_segments/` + `translations.json`
-- **Salida**: `rendered.wav` + `rendered.mp3`
+- **Salida**: `rendered.wav` + `rendered.mp3` + `timeline_map.json`
 - **Sample rate**: 44100 Hz (resampleado desde 22050 Hz nativo de XTTS)
 - **MP3**: ~190kbps VBR via ffmpeg
 
@@ -236,8 +241,8 @@ La configuracion del pipeline esta en `configs/default.yaml`. Los parametros pri
 | translation | batch_size | 8 | Segmentos por batch de traduccion |
 | tts | ref_min_duration | 6.0 | Duracion minima del clip de referencia (segundos) |
 | tts | ref_max_duration | 30.0 | Duracion maxima del clip de referencia (segundos) |
-| render | stretch_min | 0.7 | Time-stretch minimo permitido |
-| render | stretch_max | 1.5 | Time-stretch maximo permitido |
+| render | stretch_min | 0.85 | Time-stretch minimo permitido |
+| render | stretch_max | 1.15 | Time-stretch maximo permitido |
 | render | target_lufs | -16.0 | Nivel de normalizacion de volumen |
 
 ---
@@ -362,6 +367,7 @@ Mensajes WebSocket (server→client):
 | `tts_segments/` | Audio TTS generado por segmento y hablante |
 | `rendered.wav` | Audio final en espanol (lossless) |
 | `rendered.mp3` | Export MP3 del audio final (~190kbps VBR) |
+| `timeline_map.json` | Mapa de correspondencia de timestamps entre timelines EN y ES |
 
 ---
 

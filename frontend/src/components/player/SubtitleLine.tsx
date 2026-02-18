@@ -16,6 +16,8 @@ function formatTime(seconds: number): string {
 
 export function SubtitleLine({ segment, language, isActive, onClick }: Props) {
   const text = language === "en" ? segment.text_en : segment.text_es;
+  const timestamp =
+    language === "es" && segment.start_es != null ? segment.start_es : segment.start;
 
   return (
     <button
@@ -28,7 +30,7 @@ export function SubtitleLine({ segment, language, isActive, onClick }: Props) {
     >
       <div className="flex items-center gap-2 mb-1">
         <SpeakerBadge speaker={segment.speaker} />
-        <span className="text-xs text-gray-400">{formatTime(segment.start)}</span>
+        <span className="text-xs text-gray-400">{formatTime(timestamp)}</span>
       </div>
       <p className={`text-sm ${isActive ? "text-gray-900 font-medium" : "text-gray-600"}`}>
         {text}

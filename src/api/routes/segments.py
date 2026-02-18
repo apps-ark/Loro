@@ -33,15 +33,38 @@ async def get_segments(job_id: str) -> list[Segment]:
     else:
         raise HTTPException(404, "No segments found. Pipeline may not have completed.")
 
+    # Load timeline map if available (has start_es/end_es)
+    timeline_map = None
+    timeline_map_path = workdir / "timeline_map.json"
+    if timeline_map_path.exists():
+        timeline_map = read_json(timeline_map_path)
+
     segments = []
-    for seg in data.get("segments", []):
+    for i, seg in enumerate(data.get("segments", [])):
+        start = seg.get("start", 0)
+        end = seg.get("end", 0)
+
+        # Merge ES timestamps from timeline map by index
+        start_es = None
+        end_es = None
+        duration_es = None
+        if timeline_map and i < len(timeline_map.get("segments", [])):
+            tm_seg = timeline_map["segments"][i]
+            start_es = tm_seg.get("start_es")
+            end_es = tm_seg.get("end_es")
+            if start_es is not None and end_es is not None:
+                duration_es = round(end_es - start_es, 3)
+
         segments.append(Segment(
-            start=seg.get("start", 0),
-            end=seg.get("end", 0),
-            duration=seg.get("duration", seg.get("end", 0) - seg.get("start", 0)),
+            start=start,
+            end=end,
+            duration=seg.get("duration", end - start),
             speaker=seg.get("speaker", "UNKNOWN"),
             text_en=seg.get("text_en", ""),
             text_es=seg.get("text_es", seg.get("text_en", "")),
+            start_es=start_es,
+            end_es=end_es,
+            duration_es=duration_es,
         ))
 
     return segments

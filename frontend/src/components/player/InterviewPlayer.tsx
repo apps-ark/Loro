@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { useSubtitleSync } from "@/hooks/useSubtitleSync";
@@ -19,8 +19,11 @@ export function InterviewPlayer({ jobId, segments }: Props) {
   const originalUrl = getAudioUrl(jobId, "original");
   const translatedUrl = getAudioUrl(jobId, "translated");
 
-  const engine = useAudioEngine(originalUrl, translatedUrl);
-  const activeIndex = useSubtitleSync(segments, engine.currentTime);
+  const segmentsRef = useRef<Segment[]>(segments);
+  segmentsRef.current = segments;
+
+  const engine = useAudioEngine(originalUrl, translatedUrl, segmentsRef);
+  const activeIndex = useSubtitleSync(segments, engine.currentTime, engine.language);
 
   // Keyboard shortcuts
   useEffect(() => {

@@ -46,6 +46,9 @@ class Segment(BaseModel):
     speaker: str
     text_en: str
     text_es: str
+    start_es: float | None = None
+    end_es: float | None = None
+    duration_es: float | None = None
 
 
 class WSMessage(BaseModel):

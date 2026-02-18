@@ -16,6 +16,9 @@ export interface Segment {
   speaker: string;
   text_en: string;
   text_es: string;
+  start_es: number | null;
+  end_es: number | null;
+  duration_es: number | null;
 }
 
 export type Language = "en" | "es";
