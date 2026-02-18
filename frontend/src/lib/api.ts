@@ -58,6 +58,12 @@ export async function fetchJob(id: string): Promise<Job> {
   return res.json();
 }
 
+export async function retryJob(id: string): Promise<Job> {
+  const res = await fetch(`${API_URL}/api/jobs/${id}/retry`, { method: "POST" });
+  if (!res.ok) throw new Error(`Failed to retry job ${id}`);
+  return res.json();
+}
+
 export async function deleteJob(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/api/jobs/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error(`Failed to delete job ${id}`);

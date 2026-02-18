@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
 from src.api.models import Job, JobResponse, JobStatus, YouTubeJobCreate
-from src.api.storage import create_job, delete_job, get_job, list_jobs, DATA_DIR
+from src.api.storage import create_job, delete_job, get_job, list_jobs, update_job, DATA_DIR
 from src.api.worker import start_pipeline
 from src.api.youtube import is_valid_youtube_url
 from src.config import ensure_workdir, load_config, validate_environment
@@ -120,6 +120,28 @@ async def detail(job_id: str) -> JobResponse:
     job = get_job(job_id)
     if not job:
         raise HTTPException(404, f"Job {job_id} not found")
+    return _job_to_response(job)
+
+
+@router.post("/{job_id}/retry")
+async def retry(job_id: str) -> JobResponse:
+    """Retry a failed job by re-running the pipeline."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(404, f"Job {job_id} not found")
+    if job.status != JobStatus.failed:
+        raise HTTPException(400, "Solo se pueden reintentar trabajos con error")
+
+    # Reset job state
+    update_job(job_id, status=JobStatus.pending, error=None, current_step=None)
+
+    config = load_config("configs/default.yaml")
+    validate_environment()
+
+    youtube_url = job.source_url
+    start_pipeline(job_id, job.input_path, job.workdir, config, youtube_url=youtube_url)
+
+    job = get_job(job_id)
     return _job_to_response(job)
 
 
