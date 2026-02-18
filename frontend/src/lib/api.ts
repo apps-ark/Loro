@@ -25,6 +25,27 @@ export async function createJob(file: File, maxSpeakers: number = 2): Promise<Jo
   return res.json();
 }
 
+export async function createJobFromYouTube(url: string, maxSpeakers: number = 2): Promise<Job> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/api/jobs/youtube`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, max_speakers: maxSpeakers }),
+    });
+  } catch {
+    throw new Error(
+      `No se pudo conectar al servidor (${API_URL}). Verifica que el backend este corriendo.`
+    );
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Error al crear job: ${res.status} ${res.statusText}${text ? ` — ${text}` : ""}`);
+  }
+  return res.json();
+}
+
 export async function fetchJobs(): Promise<Job[]> {
   const res = await fetch(`${API_URL}/api/jobs`);
   if (!res.ok) throw new Error(`Failed to fetch jobs`);

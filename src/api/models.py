@@ -19,6 +19,11 @@ class JobCreate(BaseModel):
     max_speakers: int = Field(default=2, ge=1, le=10)
 
 
+class YouTubeJobCreate(BaseModel):
+    url: str
+    max_speakers: int = Field(default=2, ge=1, le=10)
+
+
 class Job(BaseModel):
     id: str
     filename: str
@@ -27,6 +32,7 @@ class Job(BaseModel):
     status: JobStatus = JobStatus.pending
     current_step: str | None = None
     error: str | None = None
+    source_url: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

@@ -14,7 +14,13 @@ from src.api.storage import update_job
 STEPS_ORDER = ["asr", "diarize", "merge", "translate", "tts", "render"]
 
 
-def _run_pipeline(job_id: str, input_path: str, workdir: str, config: dict):
+def _run_pipeline(
+    job_id: str,
+    input_path: str,
+    workdir: str,
+    config: dict,
+    youtube_url: str | None = None,
+):
     """Execute the full pipeline in the current thread.
 
     Updates job status and broadcasts progress via WebSocket.
@@ -51,6 +57,20 @@ def _run_pipeline(job_id: str, input_path: str, workdir: str, config: dict):
     try:
         update_job(job_id, status=JobStatus.processing)
 
+        # YouTube download pre-step
+        if youtube_url:
+            from src.api.youtube import download_audio
+
+            progress_callback({"type": "step_start", "step": "download"})
+            wav_path, video_title = download_audio(
+                youtube_url,
+                Path(input_path),
+                progress_callback=progress_callback,
+            )
+            input_path = str(wav_path)
+            update_job(job_id, input_path=input_path, filename=video_title)
+            progress_callback({"type": "step_complete", "step": "download"})
+
         for step_name in STEPS_ORDER:
             step_cls = step_map[step_name]
             step = step_cls(workdir=work_path, config=config, force=False)
@@ -69,11 +89,17 @@ def _run_pipeline(job_id: str, input_path: str, workdir: str, config: dict):
         })
 
 
-def start_pipeline(job_id: str, input_path: str, workdir: str, config: dict):
+def start_pipeline(
+    job_id: str,
+    input_path: str,
+    workdir: str,
+    config: dict,
+    youtube_url: str | None = None,
+):
     """Launch the pipeline in a background daemon thread."""
     t = threading.Thread(
         target=_run_pipeline,
-        args=(job_id, input_path, workdir, config),
+        args=(job_id, input_path, workdir, config, youtube_url),
         daemon=True,
         name=f"pipeline-{job_id}",
     )

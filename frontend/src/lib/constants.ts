@@ -8,6 +8,7 @@ export const SPEAKER_COLORS: Record<string, { bg: string; text: string; border: 
 };
 
 export const STEP_LABELS: Record<string, string> = {
+  download: "Descargando audio de YouTube",
   asr: "Transcripción (ASR)",
   diarize: "Diarización de hablantes",
   merge: "Fusión de segmentos",

@@ -7,9 +7,10 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
-from src.api.models import Job, JobResponse, JobStatus
+from src.api.models import Job, JobResponse, JobStatus, YouTubeJobCreate
 from src.api.storage import create_job, delete_job, get_job, list_jobs, DATA_DIR
 from src.api.worker import start_pipeline
+from src.api.youtube import is_valid_youtube_url
 from src.config import ensure_workdir, load_config, validate_environment
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
@@ -67,6 +68,42 @@ async def create(
 
     validate_environment()
     start_pipeline(job_id, str(input_path), str(workdir), config)
+
+    return _job_to_response(job)
+
+
+@router.post("/youtube", status_code=201)
+async def create_from_youtube(body: YouTubeJobCreate) -> JobResponse:
+    """Create a job from a YouTube URL. Audio is downloaded in background."""
+    if not is_valid_youtube_url(body.url):
+        raise HTTPException(400, "URL de YouTube no valida")
+
+    job_id = uuid.uuid4().hex[:12]
+
+    input_dir = DATA_DIR / "input"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    # yt-dlp will append .wav via postprocessor
+    input_path = input_dir / f"{job_id}_youtube"
+
+    workdir = DATA_DIR / "work" / job_id
+    ensure_workdir(str(workdir))
+
+    job = Job(
+        id=job_id,
+        filename=body.url,
+        input_path=str(input_path),
+        workdir=str(workdir),
+        status=JobStatus.pending,
+        source_url=body.url,
+    )
+    create_job(job)
+
+    config = load_config("configs/default.yaml")
+    if body.max_speakers:
+        config["diarization"]["max_speakers"] = body.max_speakers
+
+    validate_environment()
+    start_pipeline(job_id, str(input_path), str(workdir), config, youtube_url=body.url)
 
     return _job_to_response(job)
 

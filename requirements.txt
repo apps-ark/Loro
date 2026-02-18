@@ -34,5 +34,8 @@ uvicorn[standard]>=0.25.0
 python-multipart>=0.0.6
 websockets>=12.0
 
+# YouTube download
+yt-dlp>=2024.1.0
+
 # Utilities
 python-dotenv>=1.0.0

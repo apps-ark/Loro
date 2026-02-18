@@ -21,6 +21,14 @@ interface StepState {
 
 // SVG icons per pipeline step (16x16 viewBox)
 const STEP_ICONS: Record<string, React.ReactNode> = {
+  download: (
+    // Download arrow
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M8 2v8" />
+      <polyline points="4 7 8 11 12 7" />
+      <line x1="3" y1="14" x2="13" y2="14" />
+    </svg>
+  ),
   asr: (
     // Microphone
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -105,9 +113,14 @@ function PendingDot() {
 }
 
 export function ProcessingView({ messages, isConnected }: Props) {
+  // Dynamically prepend "download" step if the backend emits it
+  const hasDownloadStep = messages.some((m) => m.step === "download");
+  const steps = hasDownloadStep ? ["download", ...PIPELINE_STEPS] : PIPELINE_STEPS;
+
   const stepStates = useMemo(() => {
+    const allSteps = hasDownloadStep ? ["download", ...PIPELINE_STEPS] : PIPELINE_STEPS;
     const states: Record<string, StepState> = {};
-    for (const step of PIPELINE_STEPS) {
+    for (const step of allSteps) {
       states[step] = { status: "pending", current: 0, total: 0 };
     }
     for (const msg of messages) {
@@ -132,11 +145,12 @@ export function ProcessingView({ messages, isConnected }: Props) {
       }
     }
     return states;
-  }, [messages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, hasDownloadStep]);
 
   const pipelineComplete = messages.some((m) => m.type === "pipeline_complete");
   const pipelineError = messages.find((m) => m.type === "error" && !m.step);
-  const activeStep = PIPELINE_STEPS.find((s) => stepStates[s].status === "running");
+  const activeStep = steps.find((s) => stepStates[s]?.status === "running");
 
   return (
     <Card className="p-6 max-w-xl mx-auto">
@@ -174,7 +188,7 @@ export function ProcessingView({ messages, isConnected }: Props) {
 
       {/* Step list */}
       <div className="space-y-2">
-        {PIPELINE_STEPS.map((step) => {
+        {steps.map((step) => {
           const state = stepStates[step];
           const label = STEP_LABELS[step] || step;
           const progressPct = state.total > 0 ? Math.round((state.current / state.total) * 100) : 0;
