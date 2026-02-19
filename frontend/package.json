@@ -1,6 +1,8 @@
 {
-  "name": "frontend",
+  "name": "loro-frontend",
   "version": "0.1.0",
+  "description": "Interfaz web para Loro — traductor de entrevistas EN→ES con preservacion de voz",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",

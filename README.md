@@ -10,7 +10,7 @@ Herramienta offline batch que toma entrevistas en ingles y produce:
 - Audio doblado al espanol con clonacion de voz (voz similar al original)
 - Archivo de audio final mezclado (WAV + MP3)
 
-Incluye una **interfaz web** (FastAPI + Next.js) para subir audio, ver progreso en tiempo real y reproducir la entrevista traducida con switch instantaneo de idioma EN/ES.
+Incluye una **interfaz web** (FastAPI + Next.js) para subir audio o pegar un link de YouTube, ver progreso en tiempo real y reproducir la entrevista traducida con switch instantaneo de idioma EN/ES.
 
 ---
 
@@ -27,6 +27,7 @@ Incluye una **interfaz web** (FastAPI + Next.js) para subir audio, ver progreso 
 - [API endpoints](#api-endpoints)
 - [Outputs](#outputs)
 - [Licencias de modelos](#licencias-de-modelos)
+- [Licencia del proyecto](#licencia-del-proyecto)
 
 ---
 
@@ -35,17 +36,17 @@ Incluye una **interfaz web** (FastAPI + Next.js) para subir audio, ver progreso 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     Frontend (Next.js)                   │
-│  Upload → Progreso en tiempo real → Player con subtitulos│
+│  Upload / YouTube URL → Progreso en tiempo real → Player │
 └────────────────────────┬────────────────────────────────┘
                          │ REST + WebSocket
 ┌────────────────────────▼────────────────────────────────┐
 │                   Backend (FastAPI)                       │
-│  /api/jobs (CRUD) · /api/jobs/{id}/ws · /api/jobs/audio  │
+│  /api/jobs (CRUD) · /api/jobs/youtube · /api/jobs/{id}/ws│
 └────────────────────────┬────────────────────────────────┘
                          │ progress_callback
 ┌────────────────────────▼────────────────────────────────┐
 │                  Pipeline (Python)                        │
-│  ASR → Diarize → Merge → Translate → TTS → Render       │
+│  [Download] → ASR → Diarize → Merge → Translate → TTS → Render │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -151,6 +152,12 @@ Ensambla todos los segmentos TTS en una linea de tiempo independiente para el es
 | **rich** | >=13.7.0 | Terminal output enriquecido. Progress bars, colores y formato de logs |
 | **python-dotenv** | >=1.0.0 | Carga variables de entorno desde archivo `.env` (ej: HF_TOKEN) |
 
+### Descarga de YouTube
+
+| Libreria | Version | Descripcion |
+|----------|---------|-------------|
+| **yt-dlp** | >=2024.1.0 | Fork activo de youtube-dl. Descarga audio de YouTube y lo convierte a WAV via ffmpeg |
+
 ### Backend web (FastAPI)
 
 | Libreria | Version | Descripcion |
@@ -189,8 +196,8 @@ Ensambla todos los segmentos TTS en una linea de tiempo independiente para el es
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <repo-url>
-cd loro
+git clone https://github.com/apps-ark/Loro.git
+cd Loro
 ```
 
 ### 2. Backend (Python)
@@ -310,16 +317,19 @@ El frontend estara disponible en `http://localhost:3000`.
 
 ### Flujo de uso en la web
 
-1. **Subir audio**: arrastrar o seleccionar un archivo .mp3/.wav en la zona de upload
+1. **Subir audio o pegar URL de YouTube**: la interfaz ofrece dos tabs:
+   - **Subir archivo**: arrastrar o seleccionar un archivo .mp3/.wav
+   - **URL de YouTube**: pegar un link de YouTube (se descarga el audio automaticamente)
 2. **Configurar**: seleccionar numero maximo de hablantes (default: 2)
 3. **Procesar**: click en "Traducir Entrevista" — el pipeline se ejecuta en background
-4. **Monitorear progreso**: la vista de procesamiento muestra cada paso del pipeline en tiempo real via WebSocket (ASR, diarizacion, merge, traduccion, TTS, render)
+4. **Monitorear progreso**: la vista de procesamiento muestra cada paso del pipeline en tiempo real via WebSocket. Para URLs de YouTube se agrega un paso previo "Descargando audio de YouTube" con barra de progreso
 5. **Reproducir**: cuando completa, el player permite:
    - Reproducir audio original (EN) o traducido (ES)
    - Cambiar idioma instantaneamente (sin pausa)
    - Ver subtitulos sincronizados por hablante
    - Click en un subtitulo para saltar a esa posicion
    - Atajos de teclado: Espacio (play/pause), L (cambiar idioma), flechas (seek)
+6. **Reintentar**: si un job falla, se puede reintentar desde la lista de trabajos sin necesidad de volver a subir el archivo
 
 ---
 
@@ -330,8 +340,10 @@ El frontend estara disponible en `http://localhost:3000`.
 | Metodo | Ruta | Descripcion |
 |--------|------|-------------|
 | `POST` | `/api/jobs` | Upload audio (multipart: file, max_speakers) → 201 |
+| `POST` | `/api/jobs/youtube` | Crear job desde URL de YouTube (JSON: url, max_speakers) → 201 |
 | `GET` | `/api/jobs` | Lista de todos los jobs |
 | `GET` | `/api/jobs/{id}` | Detalle de un job |
+| `POST` | `/api/jobs/{id}/retry` | Reintentar un job fallido |
 | `DELETE` | `/api/jobs/{id}` | Eliminar job y archivos asociados |
 | `GET` | `/api/jobs/{id}/audio/original` | Stream audio EN (soporta Range headers) |
 | `GET` | `/api/jobs/{id}/audio/translated` | Stream audio ES (soporta Range headers) |
@@ -380,3 +392,11 @@ Mensajes WebSocket (server→client):
 | pyannote.audio | MIT (modelo requiere aceptar condiciones en HF) |
 | NLLB-200 distilled | CC-BY-NC-4.0 |
 | Coqui XTTS v2 | CPML (Coqui Public Model License) |
+
+> **Nota**: NLLB-200 tiene licencia NC (no comercial). Si necesitas uso comercial, considera usar un modelo de traduccion alternativo.
+
+---
+
+## Licencia del proyecto
+
+Este proyecto esta licenciado bajo la [Licencia MIT](LICENSE).
