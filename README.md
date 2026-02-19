@@ -12,6 +12,10 @@ Herramienta offline batch que toma entrevistas en ingles y produce:
 
 Incluye una **interfaz web** (FastAPI + Next.js) para subir audio o pegar un link de YouTube, ver progreso en tiempo real y reproducir la entrevista traducida con switch instantaneo de idioma EN/ES.
 
+### Demo
+
+<video src="https://github.com/apps-ark/Loro/raw/main/lorotest.mp4" width="100%" controls></video>
+
 ---
 
 ## Tabla de contenidos
